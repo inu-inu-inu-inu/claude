@@ -691,8 +691,9 @@ async function sendToBedrockTranscribe(blob) {
 
   try {
     const base64Audio = await blobToBase64(blob);
-    const mimeType = blob.type.split(';')[0];
+    const mimeType = (blob.type.split(';')[0]) || 'audio/webm';
     const audioData = base64Audio.split(',')[1];
+    showToast(`送信中… mime:${mimeType} size:${Math.round(blob.size/1024)}KB`);
 
     const prompt = `以下の音声を日本語で文字起こしし、話し言葉のまま正確に転写してください。発話者の区別が可能であれば「話者A:」のように表記してください。雑音や無音部分は無視し、発話内容のみを出力してください。文字起こし結果のみを出力し、説明文は不要です。`;
 
