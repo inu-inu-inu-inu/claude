@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>議事録 / Minutes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=DM+Mono:wght@300;400&family=Shippori+Mincho:wght@400;600&display=swap');
+
+  :root {
+    --ink: #1a1714;
+    --ink-light: #4a4540;
+    --ink-faint: #8a837a;
+    --paper: #f5f0e8;
+    --paper-dark: #ede8de;
+    --paper-mid: #e8e2d6;
+    --accent: #c0392b;
+    --accent-soft: #e8d5d2;
+    --gold: #b5860d;
+    --green: #2d6a4f;
+    --green-soft: #d4edda;
+    --border: rgba(26,23,20,0.12);
+    --shadow: 0 2px 24px rgba(26,23,20,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif JP', serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(26,23,20,0.04) 31px, rgba(26,23,20,0.04) 32px);
+    background-size: 100% 32px;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  }
+
+  .header-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-logo::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--accent);
+    border-radius: 2px;
+    background: transparent;
+    position: relative;
+  }
+
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(245,240,232,0.5);
+    letter-spacing: 0.08em;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* MAIN PANEL */
+  .main-panel { display: flex; flex-direction: column; gap: 24px; }
+
+  /* META CARD */
+  .meta-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 28px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .meta-field label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .meta-field input {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    width: 100%;
+    padding: 4px 0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .meta-field input:focus { border-bottom-color: var(--accent); }
+
+  /* TRANSCRIPT CARD */
+  .transcript-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+  }
+
+  .transcript-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--paper-dark);
+    border-radius: 4px 4px 0 0;
+  }
+
+  .transcript-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .edit-toggle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--ink-light);
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    transition: all 0.15s;
+  }
+
+  .edit-toggle:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .edit-toggle.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .transcript-body {
+    padding: 28px;
+    flex: 1;
+    position: relative;
+  }
+
+  #transcriptDisplay {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--ink);
+    min-height: 280px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  #transcriptEditor {
+    display: none;
+    width: 100%;
+    min-height: 280px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--ink);
+    border: none;
+    resize: vertical;
+    outline: none;
+    background: transparent;
+    padding: 0;
+  }
+
+  .transcript-empty {
+    color: var(--ink-faint);
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 20px 0;
+  }
+
+  /* LIVE INDICATOR */
+  .live-chunk {
+    display: inline;
+    background: rgba(192,57,43,0.08);
+    border-radius: 2px;
+    padding: 1px 2px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SIDE PANEL */
+  .side-panel { display: flex; flex-direction: column; gap: 20px; }
+
+  /* RECORD CARD */
+  .record-card {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 76px;
+  }
+
+  .record-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.45);
+    margin-bottom: 20px;
+  }
+
+  .record-btn {
+    width: 100%;
+    height: 64px;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .record-btn.idle {
+    background: var(--accent);
+    color: white;
+  }
+
+  .record-btn.idle:hover { background: #a93226; transform: translateY(-1px); }
+
+  .record-btn.recording {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    animation: pulseBorder 2s infinite;
+  }
+
+  @keyframes pulseBorder {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(192,57,43,0); }
+  }
+
+  .rec-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+  }
+  .recording .rec-dot { display: block; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .timer-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: rgba(245,240,232,0.9);
+    margin: 20px 0 8px;
+    text-align: center;
+  }
+
+  .status-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: rgba(245,240,232,0.4);
+    text-align: center;
+    letter-spacing: 0.08em;
+    min-height: 18px;
+  }
+
+  /* WAVEFORM */
+  #waveform {
+    width: 100%;
+    height: 48px;
+    margin: 16px 0 8px;
+    opacity: 0.6;
+  }
+
+  /* AWS CONFIG CARD */
+  .config-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .config-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  .config-field {
+    margin-bottom: 10px;
+  }
+
+  .config-field label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .config-field input, .config-field select {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .config-field input:focus, .config-field select:focus { border-color: var(--accent); }
+  .config-field input[type="password"] { letter-spacing: 0.15em; }
+
+  /* EXPORT BTN */
+  .export-btn {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .export-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* CHUNK LOG */
+  .chunk-log {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .chunk-log-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+
+  .chunk-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-light);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .chunk-item:last-child { border-bottom: none; }
+
+  .chunk-ts {
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    font-size: 0.6rem;
+  }
+
+  .chunk-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .chunk-status-dot.ok { background: var(--green); }
+  .chunk-status-dot.pending { background: var(--gold); animation: blink 1s infinite; }
+  .chunk-status-dot.err { background: var(--accent); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    z-index: 999;
+    animation: slideUp 0.3s ease;
+    display: none;
+  }
+  .toast.show { display: block; }
+  .toast.error { background: var(--accent); }
+  .toast.success { background: var(--green); }
+  @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .container { grid-template-columns: 1fr; padding: 20px; }
+    .meta-card { grid-template-columns: 1fr; }
+    .record-card { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">議事録</div>
+  <div class="header-meta" id="headerDate"></div>
+  <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(245,240,232,0.6);letter-spacing:0.08em;">v6.3 Lambda</div>
+</header>
+
+<div class="container">
+  <!-- MAIN -->
+  <div class="main-panel">
+
+    <div class="meta-card">
+      <div class="meta-field">
+        <label>会議名</label>
+        <input type="text" id="meetingTitle" placeholder="例：週次定例ミーティング">
+      </div>
+      <div class="meta-field">
+        <label>日時</label>
+        <input type="text" id="meetingDate" placeholder="">
+      </div>
+      <div class="meta-field">
+        <label>参加者</label>
+        <input type="text" id="meetingMembers" placeholder="例：田中、鈴木、山田">
+      </div>
+    </div>
+
+    <div class="transcript-card">
+      <div class="transcript-header">
+        <span class="transcript-title">文字起こし / Transcript</span>
+        <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">編集モード</button>
+      </div>
+      <div class="transcript-body">
+        <div id="transcriptDisplay"><span class="transcript-empty">録音を開始すると、ここにリアルタイムで文字起こしが表示されます。</span></div>
+        <textarea id="transcriptEditor" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDE -->
+  <div class="side-panel">
+
+    <div class="record-card">
+      <div class="record-label">録音コントロール</div>
+      <button class="record-btn idle" id="recordBtn" onclick="toggleRecord()">
+        <span class="rec-dot"></span>
+        <span id="recordBtnText">録音開始</span>
+      </button>
+      <div class="timer-display" id="timerDisplay">00:00:00</div>
+      <canvas id="waveform"></canvas>
+      <div class="status-line" id="statusLine">待機中</div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-title">AWS Bedrock 設定</div>
+
+      <div class="config-field">
+        <label>リージョン</label>
+        <select id="awsRegion">
+          <option value="us-east-1">us-east-1</option>
+          <option value="us-west-2">us-west-2</option>
+          <option value="ap-northeast-1" selected>ap-northeast-1 (東京)</option>
+          <option value="eu-west-1">eu-west-1</option>
+        </select>
+      </div>
+      <div class="config-field">
+        <label>モデル</label>
+        <select id="awsModel">
+          <option value="amazon.nova-pro-v1:0">Amazon Nova Pro</option>
+          <option value="anthropic.claude-3-5-sonnet-20241022-v2:0">Claude 3.5 Sonnet v2</option>
+          <option value="anthropic.claude-3-haiku-20240307-v1:0">Claude 3 Haiku</option>
+        </select>
+      </div>
+      <div class="config-field">
+        <label>チャンク間隔 (秒)</label>
+        <select id="chunkInterval">
+          <option value="15">15秒</option>
+          <option value="20" selected>20秒</option>
+          <option value="30">30秒</option>
+          <option value="60">60秒</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chunk-log" id="chunkLog">
+      <div class="chunk-log-title">処理ログ</div>
+      <div id="chunkItems"></div>
+    </div>
+
+    <button class="export-btn" onclick="exportMarkdown()">📄 Markdownとして書き出し</button>
+    <button class="export-btn" onclick="exportText()">📋 テキストとして書き出し</button>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let audioContext = null;
+let analyser = null;
+let animFrameId = null;
+let timerInterval = null;
+let chunkTimerInterval = null;
+let startTime = null;
+let transcriptText = '';
+let isEditMode = false;
+let chunkCount = 0;
+const CHUNK_MS = () => parseInt(document.getElementById('chunkInterval').value) * 1000;
+
+// ─── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('headerDate').textContent = 
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' }) +
+    ' ' + now.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('meetingDate').value = 
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' }) +
+    ' ' + now.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
+});
+
+// ─── RECORD TOGGLE ────────────────────────────────────────
+async function toggleRecord() {
+  if (!isRecording) await startRecording();
+  else stopRecording();
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    setupWaveform(stream);
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: getSupportedMimeType() });
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      if (audioChunks.length > 0) {
+        const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+        audioChunks = [];
+        await sendToBedrockTranscribe(blob);
+      }
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    startTime = Date.now();
+
+    // チャンク切り替え
+    chunkTimerInterval = setInterval(() => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        setTimeout(() => {
+          if (isRecording) {
+            audioChunks = [];
+            mediaRecorder.start();
+          }
+        }, 100);
+      }
+    }, CHUNK_MS());
+
+    // UI
+    const btn = document.getElementById('recordBtn');
+    btn.className = 'record-btn recording';
+    document.getElementById('recordBtnText').textContent = '録音停止';
+    setStatus('録音中…');
+    startTimer();
+
+    // 最初のチャンクが空なら初期化
+    if (!transcriptText) {
+      document.getElementById('transcriptDisplay').innerHTML = '';
+    }
+
+  } catch(err) {
+    showToast('マイクへのアクセスが拒否されました: ' + err.message, 'error');
+  }
+}
+
+function stopRecording() {
+  isRecording = false;
+  clearInterval(chunkTimerInterval);
+  clearInterval(timerInterval);
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+  }
+
+  cancelAnimationFrame(animFrameId);
+  clearWaveform();
+
+  const btn = document.getElementById('recordBtn');
+  btn.className = 'record-btn idle';
+  document.getElementById('recordBtnText').textContent = '録音開始';
+  setStatus('完了');
+}
+
+// ─── MIME TYPE ────────────────────────────────────────────
+function getSupportedMimeType() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+  return '';
+}
+
+// ─── BEDROCK TRANSCRIBE ───────────────────────────────────
+const LAMBDA_URL = 'https://ijg3t773krmc6ctoo2by5mowy40ojofv.lambda-url.ap-northeast-1.on.aws/';
+
+async function sendToBedrockTranscribe(blob) {
+  const region = document.getElementById('awsRegion').value;
+  const model = document.getElementById('awsModel').value;
+  chunkCount++;
+
+  const logId = addChunkLog(chunkCount, 'pending');
+  showToast(`blob size: ${blob.size} type: ${blob.type}`);
+  await sleep(2000);
+
+  try {
+    const base64Audio = await blobToBase64(blob);
+    const mimeType = (blob.type.split(';')[0]) || 'audio/webm';
+    const audioData = base64Audio.split(',')[1];
+    showToast(`送信中… mime:${mimeType} size:${Math.round(blob.size/1024)}KB`);
+
+    const prompt = `以下の音声を日本語で文字起こしし、話し言葉のまま正確に転写してください。発話者の区別が可能であれば「話者A:」のように表記してください。雑音や無音部分は無視し、発話内容のみを出力してください。文字起こし結果のみを出力し、説明文は不要です。`;
+
+    let payload;
+
+    if (model.includes('claude')) {
+      // Claude用フォーマット（音声をdocumentとして送信）
+      payload = {
+        anthropic_version: "bedrock-2023-05-31",
+        max_tokens: 2048,
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: mimeType,
+                data: audioData
+              }
+            },
+            { type: "text", text: prompt }
+          ]
+        }]
+      };
+    } else {
+      // Amazon Nova用フォーマット
+      const audioFormat = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+      payload = {
+        messages: [{
+          role: "user",
+          content: [
+            {
+              audio: {
+                format: audioFormat,
+                source: { bytes: audioData }
+              }
+            },
+            { text: prompt }
+          ]
+        }],
+        inferenceConfig: { max_new_tokens: 2048 }
+      };
+    }
+
+    showToast(`Lambda呼び出し中… ${LAMBDA_URL}`);
+    await sleep(1000);
+    const response = await fetch(LAMBDA_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region, model, payload })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errText.slice(0,200)}`);
+    }
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || data.output?.message?.content?.[0]?.text || '';
+
+    if (text) appendTranscript(text);
+    updateChunkLog(logId, 'ok');
+    setStatus(`最終更新: ${new Date().toLocaleTimeString('ja-JP')}`);
+
+  } catch(err) {
+    updateChunkLog(logId, 'err', err.message);
+    showToast('Bedrock エラー: ' + err.message, 'error');
+    setStatus('エラー発生');
+  }
+}
+
+// ─── DEMO MODE ────────────────────────────────────────────
+async function simulateTranscribe(logId) {
+  setStatus('AWS未設定 — デモモード');
+  await sleep(1500);
+  const demoLines = [
+    '【デモ】AWS認証情報を設定すると、実際の文字起こしが表示されます。',
+    '現在はデモモードで動作中です。右側パネルにAWSのキーを入力してください。',
+    '録音は正常に動作しています。音声チャンクが20秒ごとにBedrockに送信されます。'
+  ];
+  const line = demoLines[chunkCount % demoLines.length];
+  appendTranscript(line);
+  updateChunkLog(logId, 'ok');
+  setStatus('デモモード (AWS未設定)');
+}
+
+// ─── TRANSCRIPT ───────────────────────────────────────────
+function appendTranscript(text) {
+  if (isEditMode) {
+    const editor = document.getElementById('transcriptEditor');
+    if (transcriptText) transcriptText += '\n';
+    transcriptText += text;
+    editor.value = transcriptText;
+  } else {
+    if (transcriptText) transcriptText += '\n';
+    transcriptText += text;
+    renderTranscript();
+  }
+}
+
+function renderTranscript() {
+  const display = document.getElementById('transcriptDisplay');
+  if (!transcriptText) {
+    display.innerHTML = '<span class="transcript-empty">録音を開始すると、ここにリアルタイムで文字起こしが表示されます。</span>';
+    return;
+  }
+  // 最後の段落をハイライト
+  const parts = transcriptText.split('\n');
+  const last = parts.pop();
+  const prev = parts.join('\n');
+  display.innerHTML = (prev ? escHtml(prev) + '\n' : '') +
+    `<span class="live-chunk">${escHtml(last)}</span>`;
+  display.scrollTop = display.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── EDIT TOGGLE ──────────────────────────────────────────
+function toggleSecretKey() {
+  const input = document.getElementById('awsSecretKey');
+  const btn = document.getElementById('secretToggle');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function toggleEdit() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('editToggle');
+  const display = document.getElementById('transcriptDisplay');
+  const editor = document.getElementById('transcriptEditor');
+
+  if (isEditMode) {
+    btn.className = 'edit-toggle active';
+    btn.textContent = '表示モード';
+    display.style.display = 'none';
+    editor.style.display = 'block';
+    editor.value = transcriptText;
+    editor.focus();
+  } else {
+    transcriptText = editor.value;
+    btn.className = 'edit-toggle';
+    btn.textContent = '編集モード';
+    editor.style.display = 'none';
+    display.style.display = 'block';
+    renderTranscript();
+  }
+}
+
+// ─── WAVEFORM ─────────────────────────────────────────────
+function setupWaveform(stream) {
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioContext.createMediaStreamSource(stream);
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
+  source.connect(analyser);
+  drawWaveform();
+}
+
+function drawWaveform() {
+  const canvas = document.getElementById('waveform');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  const bufLen = analyser.frequencyBinCount;
+  const dataArr = new Uint8Array(bufLen);
+
+  function draw() {
+    animFrameId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArr);
+    ctx.clearRect(0, 0, W, H);
+    const barW = (W / bufLen) * 2.5;
+    let x = 0;
+    for (let i = 0; i < bufLen; i++) {
+      const barH = (dataArr[i] / 255) * H;
+      const alpha = 0.4 + (dataArr[i] / 255) * 0.6;
+      ctx.fillStyle = `rgba(192, 57, 43, ${alpha})`;
+      ctx.fillRect(x, H - barH, barW - 1, barH);
+      x += barW;
+    }
+  }
+  draw();
+}
+
+function clearWaveform() {
+  const canvas = document.getElementById('waveform');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ─── TIMER ────────────────────────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const h = Math.floor(elapsed / 3600000);
+    const m = Math.floor((elapsed % 3600000) / 60000);
+    const s = Math.floor((elapsed % 60000) / 1000);
+    document.getElementById('timerDisplay').textContent =
+      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+// ─── CHUNK LOG ────────────────────────────────────────────
+function addChunkLog(n, status, msg = '') {
+  const id = 'chunk-' + n;
+  const ts = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const item = document.createElement('div');
+  item.className = 'chunk-item';
+  item.id = id;
+  item.innerHTML = `<span class="chunk-status-dot ${status}"></span><span class="chunk-ts">${ts}</span><span>チャンク #${n}</span>`;
+  document.getElementById('chunkItems').prepend(item);
+  return id;
+}
+
+function updateChunkLog(id, status, msg = '') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const dot = el.querySelector('.chunk-status-dot');
+  dot.className = 'chunk-status-dot ' + status;
+  if (msg) el.title = msg;
+}
+
+// ─── UTILS ────────────────────────────────────────────────
+function setStatus(msg) { document.getElementById('statusLine').textContent = msg; }
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onloadend = () => res(reader.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.className = 'toast'; }, 4000);
+}
+
+// ─── AWS SIGV4 ────────────────────────────────────────────
+async function awsFetch(url, method, body, region, service, keyId, secretKey) {
+  const now = new Date();
+  // YYYYMMDDTHHmmssZ 形式
+  const amzDate = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const dateStamp = amzDate.slice(0, 8);
+
+  const urlObj = new URL(url);
+  const host = urlObj.hostname;
+  const path = urlObj.pathname; // 既にエンコード済みのパスをそのまま使う
+
+  // ボディをUTF-8バイト列に変換してハッシュ
+  const bodyBytes = new TextEncoder().encode(body);
+  const bodyHash = await sha256HexBytes(bodyBytes);
+
+  const canonicalHeaders = `content-type:application/json\nhost:${host}\nx-amz-date:${amzDate}\n`;
+  const signedHeaders = 'content-type;host;x-amz-date';
+
+  const canonicalRequest = [method, path, '', canonicalHeaders, signedHeaders, bodyHash].join('\n');
+
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+  const crBytes = new TextEncoder().encode(canonicalRequest);
+  const crHash = await sha256HexBytes(crBytes);
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, crHash].join('\n');
+
+  const signingKey = await getSignatureKey(secretKey, dateStamp, region, service);
+  const signature = toHex(await hmacSha256Bytes(signingKey, new TextEncoder().encode(stringToSign)));
+
+  const authHeader = `AWS4-HMAC-SHA256 Credential=${keyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  return fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Amz-Date': amzDate,
+      'Authorization': authHeader
+    },
+    body: bodyBytes
+  });
+}
+
+async function sha256HexBytes(bytes) {
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return toHex(new Uint8Array(buf));
+}
+
+async function hmacSha256Bytes(keyBytes, msgBytes) {
+  const k = await crypto.subtle.importKey('raw', keyBytes, {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', k, msgBytes);
+  return new Uint8Array(sig);
+}
+
+async function getSignatureKey(key, date, region, service) {
+  const enc = new TextEncoder();
+  const kDate    = await hmacSha256Bytes(enc.encode('AWS4' + key), enc.encode(date));
+  const kRegion  = await hmacSha256Bytes(kDate, enc.encode(region));
+  const kService = await hmacSha256Bytes(kRegion, enc.encode(service));
+  return await hmacSha256Bytes(kService, enc.encode('aws4_request'));
+}
+
+function toHex(arr) { return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join(''); }
+
+// ─── EXPORT ───────────────────────────────────────────────
+function getCurrentTranscript() {
+  if (isEditMode) return document.getElementById('transcriptEditor').value;
+  return transcriptText;
+}
+
+function exportMarkdown() {
+  const title = document.getElementById('meetingTitle').value || '議事録';
+  const date  = document.getElementById('meetingDate').value;
+  const members = document.getElementById('meetingMembers').value;
+  const body = getCurrentTranscript();
+  const md = `# ${title}\n\n**日時:** ${date}\n**参加者:** ${members}\n\n---\n\n## 議事内容\n\n${body}`;
+  download(md, title + '.md', 'text/markdown');
+}
+
+function exportText() {
+  const title = document.getElementById('meetingTitle').value || '議事録';
+  const date  = document.getElementById('meetingDate').value;
+  const members = document.getElementById('meetingMembers').value;
+  const body = getCurrentTranscript();
+  const txt = `${title}\n日時: ${date}\n参加者: ${members}\n\n${body}`;
+  download(txt, title + '.txt', 'text/plain');
+}
+
+function download(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type: mime + ';charset=utf-8'}));
+  a.download = filename;
+  a.click();
+  showToast('ファイルを書き出しました', 'success');
+}
+</script>
+
+</body>
+</html>
